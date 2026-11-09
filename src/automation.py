@@ -1,6 +1,8 @@
 
 import pandas as pd
 
+from data_quality import check_missing_values
+
 # Define the input file
 input_file = "data/sample_donors.csv"
 
@@ -19,7 +21,7 @@ print(donors)
 print(f"\nTotal donor records: {len(donors)}")
 
 # Check for missing values in each column
-missing_values = donors.isnull().sum()
+missing_values = check_missing_values(donors)
 
 # Display the missing values report
 print("\nMissing values report:")
