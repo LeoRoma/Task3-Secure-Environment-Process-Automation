@@ -7,6 +7,7 @@ from data_quality import (
     check_invalid_dates, 
     check_invalid_engagement,
     check_future_contacts,
+    build_quality_report,
     VALID_ENGAGEMENT_VALUES
 )
 
@@ -82,49 +83,17 @@ print(future_contacts[["donor_id", "last_contact"]])
 
 
 # Create a list to store all data quality issues
-issues = []
-
-# Record missing values from the original CSV
-for column, original_values in [
-    ("date_of_birth", original_dob),
-    ("last_contact", original_contact)
-]:
-    for index in original_values[original_values.isnull()].index:
-        issues.append({
-            "donor_id": donors.loc[index, "donor_id"],
-            "issue": f"Missing value: {column}"
-        })
-
-# Record invalid dates
-for index in donors[invalid_dob | invalid_contact].index:
-    issues.append({
-        "donor_id": donors.loc[index, "donor_id"],
-        "issue": "Invalid date"
-    })
-
-# Record duplicate donor IDs
-for index in duplicate_donors.index:
-    issues.append({
-        "donor_id": donors.loc[index, "donor_id"],
-        "issue": "Duplicate donor ID"
-    })
-
-# Record unexpected engagement values
-for index in invalid_engagement.index:
-    issues.append({
-        "donor_id": donors.loc[index, "donor_id"],
-        "issue": "Unexpected email engagement value"
-    })
-
-# Record future contact dates
-for index in future_contacts.index:
-    issues.append({
-        "donor_id": donors.loc[index, "donor_id"],
-        "issue": "Future contact date"
-    })
-
-# Convert the issues into a DataFrame
-report = pd.DataFrame(issues)
+# Build the data quality report
+report = build_quality_report(
+    donors,
+    original_dob,
+    original_contact,
+    invalid_dob,
+    invalid_contact,
+    duplicate_donors,
+    invalid_engagement,
+    future_contacts
+)
 
 # Save the report as a CSV file
 output_file = "output/data_quality_report.csv"

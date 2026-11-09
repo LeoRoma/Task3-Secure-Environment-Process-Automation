@@ -59,3 +59,77 @@ def check_future_contacts(donors):
     ]
 
     return future_contacts
+
+
+def build_quality_report(
+    donors,
+    original_dob,
+    original_contact,
+    invalid_dob,
+    invalid_contact,
+    duplicate_donors,
+    invalid_engagement,
+    future_contacts
+):
+    """
+    Build a report containing all identified data quality issues.
+    """
+
+    issues = []
+
+    # Record missing values
+    for column, original_values in [
+        ("date_of_birth", original_dob),
+        ("last_contact", original_contact)
+    ]:
+        for index in original_values[original_values.isnull()].index:
+            issues.append({
+                "donor_id": donors.loc[index, "donor_id"],
+                "issue": f"Missing value: {column}",
+                "original_value": None
+            })
+
+    # Record invalid dates
+    for index in donors.index:
+        if invalid_dob.loc[index] and original_dob.loc[index] is not None and pd.notna(original_dob.loc[index]):
+            issues.append({
+                "donor_id": donors.loc[index, "donor_id"],
+                "issue": "Invalid date: date_of_birth",
+                "original_value": original_dob.loc[index]
+            })
+
+        if invalid_contact.loc[index] and original_contact.loc[index] is not None and pd.notna(original_contact.loc[index]):
+            issues.append({
+                "donor_id": donors.loc[index, "donor_id"],
+                "issue": "Invalid date: last_contact",
+                "original_value": original_contact.loc[index]
+            })
+
+    # Record duplicate donor IDs
+    for index in duplicate_donors.index:
+        issues.append({
+            "donor_id": donors.loc[index, "donor_id"],
+            "issue": "Duplicate donor ID",
+            "original_value": None
+        })
+
+    # Record unexpected engagement values
+    for index in invalid_engagement.index:
+        issues.append({
+            "donor_id": donors.loc[index, "donor_id"],
+            "issue": "Unexpected email engagement value",
+            "original_value": donors.loc[index, "email_engagement"]
+        })
+
+    # Record future contact dates
+    for index in future_contacts.index:
+        issues.append({
+            "donor_id": donors.loc[index, "donor_id"],
+            "issue": "Future contact date",
+            "original_value": original_contact.loc[index]
+        })
+
+    return pd.DataFrame(
+        issues,
+        columns=["donor_id", "issue", "original_value"]
+    )
