@@ -1,7 +1,14 @@
 
 import pandas as pd
 
-from data_quality import check_missing_values
+from data_quality import ( 
+    check_missing_values, 
+    check_duplicate_donors, 
+    check_invalid_dates, 
+    check_invalid_engagement,
+    check_future_contacts,
+    VALID_ENGAGEMENT_VALUES
+)
 
 # Define the input file
 input_file = "data/sample_donors.csv"
@@ -28,41 +35,35 @@ print("\nMissing values report:")
 print(missing_values)
 
 # Check for invalid dates
+invalid_dob, invalid_contact = check_invalid_dates(donors)
+
+# Convert dates for further processing
 donors["date_of_birth"] = pd.to_datetime(
-    donors["date_of_birth"],
-    errors="coerce"
+    donors["date_of_birth"], errors="coerce"
 )
 
 donors["last_contact"] = pd.to_datetime(
-    donors["last_contact"],
-    errors="coerce"
+    donors["last_contact"], errors="coerce"
 )
 
 # Identify invalid dates
-invalid_dates = donors[
-    donors["date_of_birth"].isnull()
-    | donors["last_contact"].isnull()
-]
+invalid_dates = donors[invalid_dob | invalid_contact]
 
 print("\nInvalid or missing dates:")
 print(invalid_dates[["donor_id", "date_of_birth", "last_contact"]])
 
 
 # Check for duplicate donor IDs
-duplicate_donors = donors[
-    donors.duplicated(subset=["donor_id"], keep=False)
-]
+duplicate_donors = check_duplicate_donors(donors)
 
 print("\nDuplicate donor records:")
 print(duplicate_donors)
 
 
 # Check for unexpected email engagement values
-valid_engagement_values = ["High", "Medium", "Low"]
+valid_engagement_values = VALID_ENGAGEMENT_VALUES
 
-invalid_engagement = donors[
-    ~donors["email_engagement"].isin(valid_engagement_values)
-]
+invalid_engagement = check_invalid_engagement(donors)
 
 print("\nUnexpected email engagement values:")
 print(invalid_engagement[["donor_id", "email_engagement"]])
@@ -74,10 +75,7 @@ invalid_contact = original_contact.notnull() & donors["last_contact"].isnull()
 # Check for future contact dates
 today = pd.Timestamp.today().normalize()
 
-future_contacts = donors[
-    donors["last_contact"].notnull()
-    & (donors["last_contact"] > today)
-]
+future_contacts = check_future_contacts(donors)
 
 print("\nFuture contact dates:")
 print(future_contacts[["donor_id", "last_contact"]])

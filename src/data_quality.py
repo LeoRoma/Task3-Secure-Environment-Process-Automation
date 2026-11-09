@@ -1,3 +1,7 @@
+import pandas as pd
+
+VALID_ENGAGEMENT_VALUES = ["High", "Medium", "Low"]
+
 def check_missing_values(donors):
     """
     Identify missing values in the donor dataset.
@@ -32,7 +36,7 @@ def check_invalid_engagement(donors):
     """
     Identify unexpected email engagement values.
     """
-    valid_values = ["High", "Medium", "Low"]
+    valid_values = VALID_ENGAGEMENT_VALUES
 
     invalid_engagement = donors[
         ~donors["email_engagement"].isin(valid_values)
