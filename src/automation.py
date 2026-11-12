@@ -1,14 +1,13 @@
-
 import pandas as pd
 
-from data_quality import ( 
-    check_missing_values, 
-    check_duplicate_donors, 
-    check_invalid_dates, 
+from data_quality import (
+    check_missing_values,
+    check_duplicate_donors,
+    check_invalid_dates,
     check_invalid_engagement,
     check_future_contacts,
     build_quality_report,
-    VALID_ENGAGEMENT_VALUES
+    VALID_ENGAGEMENT_VALUES,
 )
 
 # Define the input file
@@ -39,13 +38,9 @@ print(missing_values)
 invalid_dob, invalid_contact = check_invalid_dates(donors)
 
 # Convert dates for further processing
-donors["date_of_birth"] = pd.to_datetime(
-    donors["date_of_birth"], errors="coerce"
-)
+donors["date_of_birth"] = pd.to_datetime(donors["date_of_birth"], errors="coerce")
 
-donors["last_contact"] = pd.to_datetime(
-    donors["last_contact"], errors="coerce"
-)
+donors["last_contact"] = pd.to_datetime(donors["last_contact"], errors="coerce")
 
 # Identify invalid dates
 invalid_dates = donors[invalid_dob | invalid_contact]
@@ -92,7 +87,7 @@ report = build_quality_report(
     invalid_contact,
     duplicate_donors,
     invalid_engagement,
-    future_contacts
+    future_contacts,
 )
 
 # Save the report as a CSV file

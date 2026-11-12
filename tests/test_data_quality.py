@@ -1,11 +1,10 @@
-
 import pandas as pd
 from datetime import timedelta
 
 from src.data_quality import (
-    check_missing_values, 
-    check_duplicate_donors, 
-    check_invalid_dates, 
+    check_missing_values,
+    check_duplicate_donors,
+    check_invalid_dates,
     check_invalid_engagement,
     check_future_contacts,
     build_quality_report,
@@ -14,12 +13,14 @@ from src.data_quality import (
 
 def test_check_missing_values():
     # Arrange: create a small test dataset
-    donors = pd.DataFrame({
-        "donor_id": ["D001", "D002"],
-        "date_of_birth": ["1985-04-12", None],
-        "last_contact": ["2026-08-10", "2026-08-11"],
-        "email_engagement": ["High", "Low"]
-    })
+    donors = pd.DataFrame(
+        {
+            "donor_id": ["D001", "D002"],
+            "date_of_birth": ["1985-04-12", None],
+            "last_contact": ["2026-08-10", "2026-08-11"],
+            "email_engagement": ["High", "Low"],
+        }
+    )
 
     # Act: run the data quality check
     result = check_missing_values(donors)
@@ -28,14 +29,17 @@ def test_check_missing_values():
     assert result["date_of_birth"] == 1
     assert result["last_contact"] == 0
 
+
 def test_check_duplicate_donors():
     # Arrange: create a dataset containing a duplicate donor ID
-    donors = pd.DataFrame({
-        "donor_id": ["D001", "D002", "D001"],
-        "date_of_birth": ["1985-04-12", "1990-11-23", "1985-04-12"],
-        "last_contact": ["2026-08-10", "2026-08-11", "2026-08-10"],
-        "email_engagement": ["High", "Low", "High"]
-    })
+    donors = pd.DataFrame(
+        {
+            "donor_id": ["D001", "D002", "D001"],
+            "date_of_birth": ["1985-04-12", "1990-11-23", "1985-04-12"],
+            "last_contact": ["2026-08-10", "2026-08-11", "2026-08-10"],
+            "email_engagement": ["High", "Low", "High"],
+        }
+    )
 
     # Act: identify duplicate donor records
     result = check_duplicate_donors(donors)
@@ -44,14 +48,17 @@ def test_check_duplicate_donors():
     assert len(result) == 2
     assert result["donor_id"].tolist() == ["D001", "D001"]
 
+
 def test_check_invalid_dates():
     # Arrange: create a dataset containing invalid dates
-    donors = pd.DataFrame({
-        "donor_id": ["D001", "D002", "D003"],
-        "date_of_birth": ["1985-04-12", "1988-15-40", None],
-        "last_contact": ["2026-08-10", "invalid-date", "2026-08-11"],
-        "email_engagement": ["High", "Low", "Medium"]
-    })
+    donors = pd.DataFrame(
+        {
+            "donor_id": ["D001", "D002", "D003"],
+            "date_of_birth": ["1985-04-12", "1988-15-40", None],
+            "last_contact": ["2026-08-10", "invalid-date", "2026-08-11"],
+            "email_engagement": ["High", "Low", "Medium"],
+        }
+    )
 
     # Act: check date validity
     invalid_dob, invalid_contact = check_invalid_dates(donors)
@@ -60,24 +67,17 @@ def test_check_invalid_dates():
     assert invalid_dob.tolist() == [False, True, True]
     assert invalid_contact.tolist() == [False, True, False]
 
+
 def test_check_invalid_engagement():
     # Arrange: create a dataset with valid and unexpected engagement values
-    donors = pd.DataFrame({
-        "donor_id": ["D001", "D002", "D003", "D004"],
-        "date_of_birth": [
-            "1985-04-12",
-            "1990-11-23",
-            "1978-06-05",
-            "1988-03-15"
-        ],
-        "last_contact": [
-            "2026-08-10",
-            "2026-08-11",
-            "2026-08-12",
-            "2026-08-13"
-        ],
-        "email_engagement": ["High", "Low", "Medium", "Unknown"]
-    })
+    donors = pd.DataFrame(
+        {
+            "donor_id": ["D001", "D002", "D003", "D004"],
+            "date_of_birth": ["1985-04-12", "1990-11-23", "1978-06-05", "1988-03-15"],
+            "last_contact": ["2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13"],
+            "email_engagement": ["High", "Low", "Medium", "Unknown"],
+        }
+    )
 
     # Act: identify unexpected engagement values
     result = check_invalid_engagement(donors)
@@ -86,19 +86,22 @@ def test_check_invalid_engagement():
     assert len(result) == 1
     assert result["donor_id"].tolist() == ["D004"]
 
+
 def test_check_future_contacts():
     # Arrange: create a dataset with a past and a future contact date
     today = pd.Timestamp.today().normalize()
 
-    donors = pd.DataFrame({
-        "donor_id": ["D001", "D002"],
-        "date_of_birth": ["1985-04-12", "1990-11-23"],
-        "last_contact": [
-            (today - timedelta(days=10)).strftime("%Y-%m-%d"),
-            (today + timedelta(days=10)).strftime("%Y-%m-%d")
-        ],
-        "email_engagement": ["High", "Low"]
-    })
+    donors = pd.DataFrame(
+        {
+            "donor_id": ["D001", "D002"],
+            "date_of_birth": ["1985-04-12", "1990-11-23"],
+            "last_contact": [
+                (today - timedelta(days=10)).strftime("%Y-%m-%d"),
+                (today + timedelta(days=10)).strftime("%Y-%m-%d"),
+            ],
+            "email_engagement": ["High", "Low"],
+        }
+    )
 
     # Act: identify future contact dates
     result = check_future_contacts(donors)
@@ -107,14 +110,17 @@ def test_check_future_contacts():
     assert len(result) == 1
     assert result["donor_id"].tolist() == ["D002"]
 
+
 def test_build_quality_report():
     # Arrange: create a dataset containing different quality issues
-    donors = pd.DataFrame({
-        "donor_id": ["D001", "D002", "D001"],
-        "date_of_birth": ["1985-04-12", "invalid-date", "1985-04-12"],
-        "last_contact": ["2026-08-10", None, "2026-08-10"],
-        "email_engagement": ["High", "Unknown", "High"]
-    })
+    donors = pd.DataFrame(
+        {
+            "donor_id": ["D001", "D002", "D001"],
+            "date_of_birth": ["1985-04-12", "invalid-date", "1985-04-12"],
+            "last_contact": ["2026-08-10", None, "2026-08-10"],
+            "email_engagement": ["High", "Unknown", "High"],
+        }
+    )
 
     original_dob = donors["date_of_birth"].copy()
     original_contact = donors["last_contact"].copy()
@@ -133,7 +139,7 @@ def test_build_quality_report():
         invalid_contact,
         duplicate_donors,
         invalid_engagement,
-        future_contacts
+        future_contacts,
     )
 
     # Assert: verify that all expected issues are included
